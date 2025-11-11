@@ -71,6 +71,12 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
+
+	// All services are started here and wait for the context to be done or error
+	startServices(ctx, logger, server, autoMessageSenderServices)
+}
+
+func startServices(ctx context.Context, logger *slog.Logger, server http.Server, autoMessageSenderServices *services.AutoMessageSender) {
 	wg := sync.WaitGroup{}
 	wg.Go(func() {
 		logger.Info("starting http server")
