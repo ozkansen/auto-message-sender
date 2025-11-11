@@ -49,7 +49,6 @@ func main() {
 	mux.HandleFunc("POST /start", autoSenderStartStopHandler.Start)
 	mux.HandleFunc("POST /stop", autoSenderStartStopHandler.Stop)
 
-	wg := sync.WaitGroup{}
 	server := http.Server{
 		Addr:         ":8080",
 		Handler:      mux,
@@ -57,26 +56,27 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
+	wg := sync.WaitGroup{}
 	wg.Go(func() {
-		err := server.ListenAndServe()
-		if err != nil {
-			if errors.Is(err, http.ErrServerClosed) {
+		err2 := server.ListenAndServe()
+		if err2 != nil {
+			if errors.Is(err2, http.ErrServerClosed) {
 				return
 			}
-			panic(err)
+			panic(err2)
 		}
 	})
 	wg.Go(func() {
 		<-ctx.Done()
-		err := server.Shutdown(ctx)
-		if err != nil {
-			panic(err)
+		err2 := server.Shutdown(ctx)
+		if err2 != nil {
+			panic(err2)
 		}
 	})
 	wg.Go(func() {
-		err := autoMessageSenderServices.Run(ctx)
-		if err != nil {
-			panic(err)
+		err2 := autoMessageSenderServices.Run(ctx)
+		if err2 != nil {
+			panic(err2)
 		}
 	})
 	wg.Wait()
