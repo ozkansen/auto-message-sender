@@ -30,6 +30,7 @@ func main() {
 	connectionString := getPostgresqlDSNFromEnv()
 	conn, err := newPostgresqlDBConn(ctx, connectionString)
 	if err != nil {
+		logger.Error("newPostgresqlDBConn error", "error", err)
 		panic(err)
 	}
 	defer conn.Close(ctx)
@@ -37,6 +38,7 @@ func main() {
 	redisAddr := getRedisAddrFromEnv()
 	client, err := newRedisClient(ctx, redisAddr)
 	if err != nil {
+		logger.Error("newRedisClient error", "error", err)
 		panic(err)
 	}
 	defer client.Close()
