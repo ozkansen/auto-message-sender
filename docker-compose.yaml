@@ -1,4 +1,18 @@
 services:
+  automessagesender:
+    build:
+      context: .
+      dockerfile: .dockerfile/automessagesender.Dockerfile
+    container_name: automessagesender
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+      - postgresdb
+    environment:
+      - REDIS_ADDR=redis://redis:6379/0
+      - POSTGRESQL_DSN=postgres://dbuser:dbpassword@postgresdb:5432/automessagesenderdb
   redis:
     image: redis:8
     container_name: redis
