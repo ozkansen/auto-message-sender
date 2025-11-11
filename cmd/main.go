@@ -9,11 +9,13 @@ import (
 	"sync"
 	"time"
 
+	"auto-message-sender/infra/cache"
 	"auto-message-sender/infra/repository"
 	"auto-message-sender/internal/handlers"
 	"auto-message-sender/internal/services"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -25,9 +27,19 @@ func main() {
 	}
 	defer conn.Close(ctx)
 
+	redisAddr := getRedisAddrFromEnv()
+	client, err := newRedisClient(ctx, redisAddr)
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	setCache := cache.NewSetCache(client)
 	messageRepository := repository.NewMessagePostgresqlRepository(conn)
-	autoMessageSenderServices := services.NewAutoMessageSender(messageRepository, nil, nil, 2)
-	messagesService := services.NewRetrieveSentMessagesService(nil)
+	autoMessageSenderServices := services.NewAutoMessageSender(messageRepository, nil, setCache, 2)
+
+	getListCache := cache.NewGetListCache(client)
+	messagesService := services.NewRetrieveSentMessagesService(getListCache)
 
 	messagesHandler := handlers.NewMessagesHandler(messagesService)
 	autoSenderStartStopHandler := handlers.NewAutoSenderStartStopHandler(autoMessageSenderServices)
@@ -85,4 +97,19 @@ func newPostgresqlDBConn(ctx context.Context, dbConnectionDsn string) (*pgx.Conn
 // "postgres://dbuser:dbpassword@postgresdb:5432/automessagesenderdb?sslmode=disable"
 func getPostgresqlDSNFromEnv() string {
 	return os.Getenv("POSTGRESQL_DSN")
+}
+
+func newRedisClient(ctx context.Context, redisAddr string) (*redis.Client, error) {
+	client := redis.NewClient(&redis.Options{
+		Addr: redisAddr,
+	})
+	err := client.Ping(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("redis.Ping error: %w", err)
+	}
+	return client, nil
+}
+
+func getRedisAddrFromEnv() string {
+	return os.Getenv("REDIS_ADDR")
 }
