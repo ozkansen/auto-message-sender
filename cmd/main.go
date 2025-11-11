@@ -101,11 +101,13 @@ func getPostgresqlDSNFromEnv() string {
 }
 
 func newRedisClient(ctx context.Context, redisAddr string) (*redis.Client, error) {
-	client := redis.NewClient(&redis.Options{
-		Addr: redisAddr,
-	})
-	err := client.Ping(ctx)
+	opt, err := redis.ParseURL(redisAddr)
 	if err != nil {
+		return nil, fmt.Errorf("redis.ParseURL error: %w", err)
+	}
+	client := redis.NewClient(opt)
+	status := client.Ping(ctx)
+	if status.Err() != nil {
 		return nil, fmt.Errorf("redis.Ping error: %w", err)
 	}
 	return client, nil
