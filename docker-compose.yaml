@@ -8,8 +8,10 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - redis
-      - postgresdb
+      redis:
+        condition: service_healthy
+      postgresdb:
+        condition: service_healthy
     environment:
       - REDIS_ADDR=redis://redis:6379/0
       - POSTGRESQL_DSN=postgres://dbuser:dbpassword@postgresdb:5432/automessagesenderdb
@@ -19,6 +21,11 @@ services:
     restart: always
     ports:
       - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
   postgresdb:
     image: postgres:18
     container_name: postgresdb
@@ -33,5 +40,10 @@ services:
       - postgresdata:/var/lib/postgresql/docker
       - ./db/schema/message_repository.sql:/docker-entrypoint-initdb.d/message_repository.sql
       - ./db/seeds/seeds01.sql:/docker-entrypoint-initdb.d/seeds01.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U dbuser -d automessagesenderdb" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 volumes:
   postgresdata:
