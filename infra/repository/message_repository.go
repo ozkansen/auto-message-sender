@@ -47,7 +47,7 @@ func (r *MessagePostgresqlRepository) GetUnsentMessages(ctx context.Context, lim
 }
 
 func (r *MessagePostgresqlRepository) getUnsentMessages(ctx context.Context, tx pgx.Tx, limit int) ([]models.Message, error) {
-	rows, err := tx.Query(ctx, "SELECT (message_id, phone_number, message_content, sending_status, updated_at, created_at) FROM messages WHERE sending_status = 'waiting' LIMIT $1", limit)
+	rows, err := tx.Query(ctx, "SELECT message_id, phone_number, message_content, updated_at, created_at FROM messages WHERE sending_status = 'waiting' LIMIT $1", limit)
 	if err != nil {
 		return nil, err
 	}
@@ -58,10 +58,10 @@ func (r *MessagePostgresqlRepository) getUnsentMessages(ctx context.Context, tx 
 			&msg.MessageID,
 			&msg.PhoneNumber,
 			&msg.MessageContent,
-			&msg.SendingStatus,
 			&msg.UpdatedAt,
 			&msg.CreatedAt,
 		)
+		msg.SendingStatus = "waiting"
 		if err2 != nil {
 			return nil, err2
 		}
