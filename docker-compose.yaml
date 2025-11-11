@@ -1,0 +1,17 @@
+services:
+  postgresdb:
+    image: postgres:17
+    container_name: postgresdb
+    restart: always
+    environment:
+      POSTGRES_USER: "dbuser"
+      POSTGRES_PASSWORD: "dbpassword"
+      POSTGRES_DB: "automessagesenderdb"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgresdata:/var/lib/postgresql/data
+      - ./db/schema/message_repository.sql:/docker-entrypoint-initdb.d/message_repository.sql
+      - ./db/seeds/seeds01.sql:/docker-entrypoint-initdb.d/seeds01.sql
+volumes:
+  postgresdata:
