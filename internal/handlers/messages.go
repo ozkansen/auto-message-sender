@@ -27,6 +27,7 @@ func (h *MessagesHandler) RetrieveSentMessagesHandler(w http.ResponseWriter, r *
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(messages)
 }
