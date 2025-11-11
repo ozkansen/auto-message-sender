@@ -47,17 +47,20 @@ func NewAutoMessageSender(
 }
 
 func (s *AutoMessageSender) Run(ctx context.Context) error {
-	ticker := time.NewTicker(2 * time.Minute)
+	// Uygulama başladığında gönderim işlemine başla
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
+			ticker.Stop()
 			err := s.sendMessages(ctx)
 			if err != nil {
 				return fmt.Errorf("sendMessages error: %w", err)
 			}
+			ticker.Reset(2 * time.Minute)
 		case <-s.stopSignal:
 			ticker.Stop()
 		case <-s.startSignal:
