@@ -20,13 +20,13 @@ func NewAutoSenderStartStopHandler(autoMessageSender autoSenderStartStopService)
 	}
 }
 
-func (h *AutoSenderStartStopHandler) Start(w http.ResponseWriter, r *http.Request) {
+func (h *AutoSenderStartStopHandler) Start(w http.ResponseWriter, _ *http.Request) {
 	h.autoMessageSender.Start()
 	w.WriteHeader(http.StatusOK)
 	_, _ = fmt.Fprint(w, "OK")
 }
 
-func (h *AutoSenderStartStopHandler) Stop(w http.ResponseWriter, r *http.Request) {
+func (h *AutoSenderStartStopHandler) Stop(w http.ResponseWriter, _ *http.Request) {
 	h.autoMessageSender.Stop()
 	w.WriteHeader(http.StatusOK)
 	_, _ = fmt.Fprint(w, "OK")
