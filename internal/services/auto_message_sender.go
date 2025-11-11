@@ -82,15 +82,15 @@ func (s *AutoMessageSender) sendMessages(ctx context.Context) error {
 	for _, message := range messages {
 		sendMessageResponse, err2 := s.messageSender.SendMessage(ctx, message)
 		if err2 != nil {
-			return fmt.Errorf("messageSender.SendMessage error: %w", err)
+			return fmt.Errorf("messageSender.SendMessage error: %w", err2)
 		}
 		err2 = s.cache.Set(ctx, sendMessageResponse)
 		if err2 != nil {
-			return fmt.Errorf("cache.Set error: %w", err)
+			return fmt.Errorf("cache.Set error: %w", err2)
 		}
-		err2 = s.messageRepository.UpdateMessageStatus(ctx, message.MessageID, "Sent")
+		err2 = s.messageRepository.UpdateMessageStatus(ctx, message.MessageID, "sent")
 		if err2 != nil {
-			return fmt.Errorf("messageRepository.UpdateMessageStatus error: %w", err)
+			return fmt.Errorf("messageRepository.UpdateMessageStatus error: %w", err2)
 		}
 	}
 	return nil
