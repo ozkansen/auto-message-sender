@@ -7,7 +7,9 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"auto-message-sender/infra/cache"
@@ -25,7 +27,7 @@ func main() {
 	logger.Info("starting application")
 	defer logger.Info("application stopped")
 
-	ctx := context.Background()
+	ctx := gracefullyShutdownContext(context.Background())
 
 	connectionString := getPostgresqlDSNFromEnv()
 	conn, err := newPostgresqlDBConn(ctx, connectionString)
@@ -110,6 +112,12 @@ func startServices(ctx context.Context, logger *slog.Logger, server http.Server,
 			logger.Error("auto message sender error", "error", err2)
 			panic(err2)
 		}
+		select {
+		case <-ctx.Done():
+			logger.Info("shutting down auto message sender")
+		default:
+			logger.Info("auto message sender stopped")
+		}
 	})
 	wg.Wait()
 }
@@ -166,4 +174,15 @@ func simpleAccessLoggerHttpMiddleware(logger *slog.Logger, next http.Handler) ht
 			slog.Duration("total_duration", duration),
 		)
 	})
+}
+
+func gracefullyShutdownContext(ctx context.Context) context.Context {
+	ctx, cancel := context.WithCancelCause(ctx)
+	go func() {
+		stopChan := make(chan os.Signal, 1)
+		signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
+		<-stopChan
+		cancel(fmt.Errorf("shutdown signal received"))
+	}()
+	return ctx
 }
