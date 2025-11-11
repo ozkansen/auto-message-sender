@@ -74,7 +74,7 @@ func main() {
 		}
 	})
 	wg.Go(func() {
-		err := autoMessageSenderServices.Run(context.TODO())
+		err := autoMessageSenderServices.Run(ctx)
 		if err != nil {
 			panic(err)
 		}
