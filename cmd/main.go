@@ -67,7 +67,8 @@ func main() {
 		}
 	})
 	wg.Go(func() {
-		err := server.Shutdown(context.TODO())
+		<-ctx.Done()
+		err := server.Shutdown(ctx)
 		if err != nil {
 			panic(err)
 		}
