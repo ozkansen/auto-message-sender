@@ -61,9 +61,10 @@ func main() {
 	mux.HandleFunc("POST /start", autoSenderStartStopHandler.Start)
 	mux.HandleFunc("POST /stop", autoSenderStartStopHandler.Stop)
 
+	muxWithLogger := simpleAccessLoggerHttpMiddleware(logger, mux)
 	server := http.Server{
 		Addr:         ":8080",
-		Handler:      mux,
+		Handler:      muxWithLogger,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
@@ -140,4 +141,17 @@ func newSlogLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}))
+}
+
+func simpleAccessLoggerHttpMiddleware(logger *slog.Logger, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		duration := time.Since(start)
+		logger.Info("request complete",
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
+			slog.Duration("total_duration", duration),
+		)
+	})
 }
