@@ -52,7 +52,7 @@ func (s *AutoMessageSender) Run(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return context.Cause(ctx)
+			return nil
 		case <-ticker.C:
 			err := s.sendMessages(ctx)
 			if err != nil {
