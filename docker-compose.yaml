@@ -6,7 +6,7 @@ services:
     ports:
       - "6379:6379"
   postgresdb:
-    image: postgres:17
+    image: postgres:18
     container_name: postgresdb
     restart: always
     environment:
@@ -16,7 +16,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgresdata:/var/lib/postgresql/data
+      - postgresdata:/var/lib/postgresql/docker
       - ./db/schema/message_repository.sql:/docker-entrypoint-initdb.d/message_repository.sql
       - ./db/seeds/seeds01.sql:/docker-entrypoint-initdb.d/seeds01.sql
 volumes:
