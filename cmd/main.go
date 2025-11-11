@@ -62,6 +62,10 @@ func main() {
 	mux.HandleFunc("GET /messages", messagesHandler.RetrieveSentMessagesHandler)
 	mux.HandleFunc("POST /start", autoSenderStartStopHandler.Start)
 	mux.HandleFunc("POST /stop", autoSenderStartStopHandler.Stop)
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = fmt.Fprintf(w, "OK")
+	})
 
 	muxWithLogger := simpleAccessLoggerHttpMiddleware(logger, mux)
 	server := http.Server{
