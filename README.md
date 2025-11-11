@@ -1,5 +1,9 @@
 # Automatic Message Sending System
 
+## Description
+
+Sample application that sends messages at periodic intervals
+
 ## Environment Variables
 
 Postgresql example connection string for application database connection
