@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"sync"
@@ -11,6 +12,7 @@ import (
 
 	"auto-message-sender/infra/cache"
 	"auto-message-sender/infra/repository"
+	"auto-message-sender/infra/sender"
 	"auto-message-sender/internal/handlers"
 	"auto-message-sender/internal/services"
 
@@ -19,7 +21,12 @@ import (
 )
 
 func main() {
+	logger := newSlogLogger()
+	logger.Info("starting application")
+	defer logger.Info("application stopped")
+
 	ctx := context.Background()
+
 	connectionString := getPostgresqlDSNFromEnv()
 	conn, err := newPostgresqlDBConn(ctx, connectionString)
 	if err != nil {
@@ -34,12 +41,17 @@ func main() {
 	}
 	defer client.Close()
 
-	setCache := cache.NewSetCache(client)
+	webhookMessageSender := sender.NewWebhookMessageSender()
+	webhookMessageSenderWithLogger := sender.NewWebhookMessageSenderWithLogger(logger, webhookMessageSender)
 	messageRepository := repository.NewMessagePostgresqlRepository(conn)
-	autoMessageSenderServices := services.NewAutoMessageSender(messageRepository, nil, setCache, 2)
+	messageRepositoryWithLogger := repository.NewMessageRepositoryWithLogger(logger, messageRepository)
+	setCache := cache.NewSetCache(client)
+	setCacheWithLogger := cache.NewSetCacheWithLogger(logger, setCache)
+	autoMessageSenderServices := services.NewAutoMessageSender(messageRepositoryWithLogger, webhookMessageSenderWithLogger, setCacheWithLogger, 2)
 
 	getListCache := cache.NewGetListCache(client)
-	messagesService := services.NewRetrieveSentMessagesService(getListCache)
+	getListCacheWithLogger := cache.NewGetListCacheWithLogger(logger, getListCache)
+	messagesService := services.NewRetrieveSentMessagesService(getListCacheWithLogger)
 
 	messagesHandler := handlers.NewMessagesHandler(messagesService)
 	autoSenderStartStopHandler := handlers.NewAutoSenderStartStopHandler(autoMessageSenderServices)
@@ -58,24 +70,31 @@ func main() {
 	}
 	wg := sync.WaitGroup{}
 	wg.Go(func() {
+		logger.Info("starting http server")
 		err2 := server.ListenAndServe()
 		if err2 != nil {
 			if errors.Is(err2, http.ErrServerClosed) {
+				logger.Warn("http server stopped")
 				return
 			}
+			logger.Error("http server error", "error", err2)
 			panic(err2)
 		}
 	})
 	wg.Go(func() {
 		<-ctx.Done()
+		logger.Info("shutting down http server")
 		err2 := server.Shutdown(ctx)
 		if err2 != nil {
+			logger.Error("http server shutdown error", "error", err2)
 			panic(err2)
 		}
 	})
 	wg.Go(func() {
+		logger.Info("starting auto message sender")
 		err2 := autoMessageSenderServices.Run(ctx)
 		if err2 != nil {
+			logger.Error("auto message sender error", "error", err2)
 			panic(err2)
 		}
 	})
@@ -115,4 +134,10 @@ func newRedisClient(ctx context.Context, redisAddr string) (*redis.Client, error
 
 func getRedisAddrFromEnv() string {
 	return os.Getenv("REDIS_ADDR")
+}
+
+func newSlogLogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
 }
