@@ -37,7 +37,7 @@ func (c *GetListCache) GetList(ctx context.Context) ([]models.MessageSenderRespo
 		return nil, scanKeys.Err()
 	}
 	resultKeys := scanKeys.Val()
-	var messages []models.MessageSenderResponse
+	messages := make([]models.MessageSenderResponse, 0, 10)
 	for _, key := range resultKeys {
 		scan := c.client.HGetAll(ctx, key)
 		if scan.Err() != nil {
