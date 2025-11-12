@@ -47,7 +47,12 @@ func main() {
 	}
 	defer client.Close()
 
-	webhookMessageSender := sender.NewWebhookMessageSender()
+	webhookSiteURL := getWebhookSiteURLFromEnv()
+	if webhookSiteURL == "" {
+		logger.Error("webhook site url is empty")
+		panic("webhook site url is empty")
+	}
+	webhookMessageSender := sender.NewWebhookMessageSender(webhookSiteURL)
 	webhookMessageSenderWithLogger := sender.NewWebhookMessageSenderWithLogger(logger, webhookMessageSender)
 	messageRepository := repository.NewMessagePostgresqlRepository(conn)
 	messageRepositoryWithLogger := repository.NewMessageRepositoryWithLogger(logger, messageRepository)
@@ -157,6 +162,10 @@ func newRedisClient(ctx context.Context, redisAddr string) (*redis.Client, error
 
 func getRedisAddrFromEnv() string {
 	return os.Getenv("REDIS_ADDR")
+}
+
+func getWebhookSiteURLFromEnv() string {
+	return os.Getenv("WEBHOOK_SITE_URL")
 }
 
 func newSlogLogger() *slog.Logger {

@@ -15,6 +15,7 @@ services:
     environment:
       - REDIS_ADDR=redis://redis:6379/0
       - POSTGRESQL_DSN=postgres://dbuser:dbpassword@postgresdb:5432/automessagesenderdb
+      - WEBHOOK_SITE_URL=https://webhook.site/264d7ada-f7a7-40e9-8f30-eb0bde016436
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 10s
