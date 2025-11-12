@@ -1,0 +1,94 @@
+openapi: 3.1.1
+info:
+  title: Auto Message Sending Application
+  description: Automatic message sending application for example project
+  version: 1.0.0
+servers:
+  - url: "http://localhost:8080"
+    description: Development Server
+paths:
+  /messages:
+    get:
+      summary: Get Sent Messages
+      operationId: getSentMessages
+      tags:
+        - Message
+      responses:
+        '200':
+          description: A list of sent message
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Messages'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /start:
+    post:
+      summary: Start Auto Message Sender
+      operationId: startAutoMessageSender
+      tags:
+        - Auto Message Sender
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OKResponse'
+  /stop:
+    post:
+      summary: Stop Auto Message Sender
+      operationId: stopAutoMessageSender
+      tags:
+        - Auto Message Sender
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OKResponse'
+  /health:
+    get:
+      summary: Health Check
+      operationId: healthCheck
+      tags:
+        - Health Check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OKResponse'
+components:
+  schemas:
+    Messages:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Accepted"
+        message_id:
+          type: string
+          format: uuid
+          example: "3f846a61-2e99-42f9-a9ab-1e6cf1703476"
+        sent_at:
+          type: string
+          format: date-time
+          example: "2025-11-12T01:09:51.133430722Z"
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "redis connection error"
+    OKResponse:
+      type: string
+      example: "OK"
