@@ -89,3 +89,7 @@ Response:
 ```
 OK
 ```
+
+## Swagger UI API Documentation
+
+- URL: https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/ozkansen/auto-message-sender/refs/heads/main/docs/swagger/api.yaml
