@@ -27,7 +27,9 @@ func main() {
 	logger.Info("starting application")
 	defer logger.Info("application stopped")
 
-	ctx := gracefullyShutdownContext(context.Background())
+	parentCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ctx := gracefullyShutdownContext(parentCtx)
 
 	connectionString := getPostgresqlDSNFromEnv()
 	conn, err := newPostgresqlDBConn(ctx, connectionString)
