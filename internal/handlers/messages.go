@@ -25,6 +25,9 @@ func (h *MessagesHandler) RetrieveSentMessagesHandler(w http.ResponseWriter, r *
 	messages, err := h.retrieveSentMessagesService.RetrieveSentMessages(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": err.Error(),
+		})
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
