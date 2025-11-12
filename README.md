@@ -6,6 +6,8 @@ Sample application that sends messages at periodic intervals
 
 *While developing the application, efforts were made to reduce external dependencies as much as possible.*
 
+![ system-design-image ](./docs/assets/image01.png)
+
 ## Environment Variables
 
 Postgresql example connection string for application database connection
